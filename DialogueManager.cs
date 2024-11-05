@@ -15,12 +15,8 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private GameObject[] choices;
 
     private TextMeshProUGUI[] choicesText;
-
-
     private Story currentStory;
-
     public bool DialogueIsPlaying { get; private set; }
-
 
     private static DialogueManager instance;
 
@@ -54,10 +50,7 @@ public class DialogueManager : MonoBehaviour
 
     private void Update()
     {
-        if (!DialogueIsPlaying)
-        {
-            return;
-        }
+        if (!DialogueIsPlaying) return;
 
         if (Input.GetKeyDown(KeyCode.X))
         {
@@ -65,14 +58,11 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
-
     public void EnterDialogueMode(TextAsset inkJSON)
     {
-
         currentStory = new Story(inkJSON.text);
         DialogueIsPlaying = true;
         dialoguePanel.SetActive(true);
-
         ContinueStory();
     }
 
@@ -81,6 +71,7 @@ public class DialogueManager : MonoBehaviour
         DialogueIsPlaying = false;
         dialoguePanel.SetActive(false);
         dialogueText.text = "";
+        currentStory = null; // Clear current story when exiting
     }
 
     private void ContinueStory()
@@ -88,7 +79,6 @@ public class DialogueManager : MonoBehaviour
         if (currentStory.canContinue)
         {
             dialogueText.text = currentStory.Continue();
-
             DisplayChoices();
         }
         else
@@ -103,16 +93,17 @@ public class DialogueManager : MonoBehaviour
 
         Debug.Log($"Number of choices available: {currentChoices.Count}");
 
-        if (currentChoices.Count > choices.Length)
+        if (currentChoices.Count == 0)
         {
-            Debug.LogError("More choices were given than UI can support: " + currentChoices.Count);
+          
+            ExitDialogueMode();
+            return;
         }
 
         int index = 0;
-
         foreach (Choice choice in currentChoices)
         {
-            if (index < choices.Length) 
+            if (index < choices.Length)
             {
                 choices[index].gameObject.SetActive(true);
                 choicesText[index].text = choice.text;
@@ -121,7 +112,6 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-       
         for (int i = index; i < choices.Length; i++)
         {
             choices[i].gameObject.SetActive(false);
@@ -129,8 +119,6 @@ public class DialogueManager : MonoBehaviour
 
         StartCoroutine(SelectFirstChoice());
     }
-
-
 
     private IEnumerator SelectFirstChoice()
     {
@@ -143,21 +131,17 @@ public class DialogueManager : MonoBehaviour
     {
         Debug.Log("MakeChoice called with index: " + choiceIndex);
 
-        foreach (GameObject choiceButton in choices)
-        {
-            choiceButton.SetActive(false);
-        }
-
         if (choiceIndex >= 0 && choiceIndex < currentStory.currentChoices.Count)
         {
             Debug.Log("Valid choice made, continuing story...");
             currentStory.ChooseChoiceIndex(choiceIndex);
+
+           
             ContinueStory();
         }
         else
         {
             Debug.LogError("Choice index out of range: " + choiceIndex);
-            Debug.LogError("No choices available to select.");
         }
     }
 }
